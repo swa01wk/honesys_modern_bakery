@@ -2,6 +2,8 @@ let filterAPIResponse = [];
 let transformAPIResponse = [];
 let forecastAPIResponse = [];
 
+const BASE_PATH = "http://43.204.211.22:5000/";
+
 // Helper function to show/hide loaders
 function showLoader(loaderId) {
   document.getElementById(loaderId).classList.remove("hidden");
@@ -12,7 +14,7 @@ function hideLoader(loaderId) {
 }
 
 document.getElementById("filterButton").addEventListener("click", function () {
-  const apiUrl = "http://127.0.0.1:5000/filter_data";
+  const apiUrl = `${BASE_PATH}/filter_data`;
 
   const data = {
     file_path: document.getElementById("file_path").value,
@@ -79,7 +81,7 @@ document.getElementById("filterButton").addEventListener("click", function () {
 document
   .getElementById("transformButton")
   .addEventListener("click", function () {
-    const apiUrl = "http://127.0.0.1:5000/transform_data";
+    const apiUrl = `${BASE_PATH}/transform_data`;
 
     const data = {
       filtered_data: filterAPIResponse,
@@ -126,7 +128,7 @@ document
 document
   .getElementById("forecastButton")
   .addEventListener("click", function () {
-    const apiUrl = "http://127.0.0.1:5000/forecast";
+    const apiUrl = `${BASE_PATH}/forecast`;
 
     const data = {
       aggregated_data: transformAPIResponse,
