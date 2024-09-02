@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forecast Chart</title>
+</head>
+
+<body>
+    <h1>Forecast Chart</h1>
+    <div>
+        <img id="forecast-chart" src="" alt="Forecast Chart" style="display:none;">
+    </div>
+
+    <script>
+        // Function to fetch and display the forecast chart
+        async function fetchForecast() {
+            const response = await fetch('/forecast', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    // Provide the required data here
+                    aggregated_data: [/* Your aggregated data here */],
+                    shift_offset: -4,
+                    forecast_days: 7,
+                    seasonal_period: 4
+                })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const chart = document.getElementById('forecast-chart');
+                chart.src = data.image_url;
+                chart.style.display = 'block';
+            }
+        }
+
+        // Call fetchForecast to display the chart
+        fetchForecast();
+    </script>
+</body>
+
+</html>
