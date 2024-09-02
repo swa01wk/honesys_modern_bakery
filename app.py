@@ -62,11 +62,12 @@ def transform_data():
 
 @app.route("/forecast", methods=["POST"])
 def forecast():
+
     cleanup_images()
 
     aggregated_data = request.json.get("aggregated_data")
     shift_offset = request.json.get("shift_offset", -4)  # offset by expiry period
-    forecast_days = request.json.get("forecast_days", 7)
+    forecast_days = request.json.get("forecast_days", 10)
     seasonal_period = request.json.get("seasonal_period", 4)  # expiry period
 
     aggregated_data_df = pd.DataFrame(aggregated_data)
@@ -88,24 +89,19 @@ def forecast():
     plt.plot(results.index, results['shelved_sum'], label='Historical Shelved', marker='o')
     plt.plot(results.index, results['expired_sum'], label='Historical Expired', marker='o')
     
-    last_date = pd.to_datetime(results.index[-1])
-
     plt.plot(
-        pd.date_range(start=last_date + pd.Timedelta(days=forecast_days), periods=forecast_days, freq='D'),
         forecast_shelved,
         label='Forecast Shelved',
         linestyle='--',
         marker='o'
     )
     plt.plot(
-        pd.date_range(start=last_date + pd.Timedelta(days=forecast_days), periods=forecast_days, freq='D'),
         forecast_expired,
         label='Forecast Expired',
         linestyle='--',
         marker='o'
     )
     plt.plot(
-        pd.date_range(start=last_date + pd.Timedelta(days=forecast_days), periods=forecast_days, freq='D'),
         forecast_net,
         label='Forecast Net Quantity',
         linestyle='--',
@@ -128,7 +124,6 @@ def forecast():
     return jsonify({"image_url": url_for('static', filename=f'images/{os.path.basename(image_filename)}')}), 200
 
 def cleanup_images():
-    """Delete old images to prevent storage issues."""
     for filename in os.listdir(IMAGE_DIR):
         file_path = os.path.join(IMAGE_DIR, filename)
         if os.path.isfile(file_path):
