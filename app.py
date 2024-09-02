@@ -1,4 +1,8 @@
-from flask import Flask, request, jsonify
+import io
+import matplotlib.pyplot as plt
+import pandas as pd
+from datetime import datetime
+from flask import Flask, request, jsonify, send_file
 from ets_forecast import (
     DataLoader,
     DataFilter,
@@ -6,8 +10,6 @@ from ets_forecast import (
     DataProcessor,
     DataForecast,
 )
-import pandas as pd
-from datetime import datetime
 from flask_cors import CORS
 
 app = Flask(__name__)
@@ -59,6 +61,9 @@ def forecast():
     seasonal_period = request.json.get("seasonal_period", 4)  # expiry period
 
     aggregated_data_df = pd.DataFrame(aggregated_data)
+    aggregated_data_df["BillingDate"] = pd.to_datetime(
+        aggregated_data_df["BillingDate"]
+    )  # Ensure datetime format
     aggregated_data_df.set_index("BillingDate", inplace=True)
 
     data_processor = DataProcessor(aggregated_data=aggregated_data_df)
@@ -67,10 +72,67 @@ def forecast():
     data_forecast = DataForecast(
         results=results, forecast_days=forecast_days, seasonal_period=seasonal_period
     )
-    # forecast_result = data_forecast.quantity_forecast('expired_sum')
-    forecast_result = data_forecast.net_forecast()
 
-    return jsonify(forecast_result.to_dict(orient="records")), 200
+    forecast_shelved = data_forecast.quantity_forecast("shelved_sum")
+    forecast_expired = data_forecast.quantity_forecast("expired_sum")
+    forecast_net = data_forecast.net_forecast()
+
+    plt.figure(figsize=(14, 6))
+    plt.plot(
+        results.index, results["shelved_sum"], label="Historical Shelved", marker="o"
+    )
+    plt.plot(
+        results.index, results["expired_sum"], label="Historical Expired", marker="o"
+    )
+
+    last_date = pd.to_datetime(results.index[-1])
+
+    plt.plot(
+        pd.date_range(
+            start=last_date + pd.Timedelta(days=forecast_days),
+            periods=forecast_days,
+            freq="7D",
+        ),
+        forecast_shelved,
+        label="Forecast Shelved",
+        linestyle="--",
+        marker="o",
+    )
+    plt.plot(
+        pd.date_range(
+            start=last_date + pd.Timedelta(days=forecast_days),
+            periods=forecast_days,
+            freq="7D",
+        ),
+        forecast_expired,
+        label="Forecast Expired",
+        linestyle="--",
+        marker="o",
+    )
+    plt.plot(
+        pd.date_range(
+            start=last_date + pd.Timedelta(days=forecast_days),
+            periods=forecast_days,
+            freq="7D",
+        ),
+        forecast_net,
+        label="Forecast Net Quantity",
+        linestyle="--",
+        marker="o",
+    )
+    plt.title("Forecast for Shelved, Expired, and Net Quantities")
+    plt.xlabel("Offset Date")
+    plt.ylabel("Quantity In Base Unit")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+
+    img = io.BytesIO()
+    plt.savefig(img, format="png")
+    img.seek(0)
+    plt.close()
+
+    return send_file(img, mimetype="image/png")
 
 
 if __name__ == "__main__":

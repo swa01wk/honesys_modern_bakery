@@ -2,7 +2,7 @@ let filterAPIResponse = [];
 let transformAPIResponse = [];
 let forecastAPIResponse = [];
 
-const BASE_PATH = "http://43.204.211.22:5000/";
+const BASE_PATH = "http://127.0.0.1:5000";
 
 // Helper function to show/hide loaders
 function showLoader(loaderId) {
@@ -144,21 +144,18 @@ document
       body: JSON.stringify(data),
     })
       .then((response) => response.json())
-      .then((data) => {
-        forecastAPIResponse = data;
+      .then((blob) => {
         const container = document.getElementById("forecast-card-container");
         container.innerHTML = ""; // Clear previous content
 
-        data.forEach((item) => {
-          const card = document.createElement("div");
-          card.className = "card";
+        const imageUrl = URL.createObjectURL(blob); // Create an object URL from the blob
 
-          card.innerHTML = `
+        const image = document.createElement("img");
+        image.src = imageUrl; // Set the source to the blob URL
+        image.alt = "Forecast Image";
+        image.className = "forecast-image";
 
-          <div class="card-content"><b>Forecast Net :</b> ${item.forecast_net}</div>
-        `;
-          container.appendChild(card);
-        });
+        container.appendChild(image); // Add the image to the container
       })
       .catch((error) => {
         console.error("Error:", error);
