@@ -2,10 +2,10 @@ let filterAPIResponse = [];
 let transformAPIResponse = [];
 let forecastAPIResponse = [];
 
-const BASE_PATH = "http://127.0.0.1:5000";
+const BASE_PATH = "http://43.204.211.22:5000";
+/* const BASE_PATH = "http://127.0.0.1:5000"; */
 
-// Helper function to show/hide loaders
-function showLoader(loaderId) {
+http: function showLoader(loaderId) {
   document.getElementById(loaderId).classList.remove("hidden");
 }
 
@@ -35,7 +35,7 @@ document.getElementById("filterButton").addEventListener("click", function () {
     .then((data) => {
       filterAPIResponse = data;
       const container = document.getElementById("filter-card-container");
-      container.innerHTML = ""; // Clear previous content
+      container.innerHTML = ""; 
 
       data.forEach((item) => {
         const card = document.createElement("div");
@@ -100,7 +100,7 @@ document
       .then((data) => {
         transformAPIResponse = data;
         const container = document.getElementById("transform-card-container");
-        container.innerHTML = ""; // Clear previous content
+        container.innerHTML = ""; 
 
         data.forEach((item) => {
           const card = document.createElement("div");
@@ -146,17 +146,18 @@ document
       .then((response) => response.json())
       .then((blob) => {
         const container = document.getElementById("forecast-card-container");
-        container.innerHTML = ""; // Clear previous content
+        container.innerHTML = ""; 
 
-        const imageUrl = URL.createObjectURL(blob); // Create an object URL from the blob
+        const imageUrl = `${BASE_PATH}${blob.image_url}`; 
 
         const image = document.createElement("img");
-        image.src = imageUrl; // Set the source to the blob URL
+        image.src = imageUrl; 
         image.alt = "Forecast Image";
-        image.className = "forecast-image";
+        image.className = "forecast-image"; 
 
-        container.appendChild(image); // Add the image to the container
+        container.appendChild(image); 
       })
+
       .catch((error) => {
         console.error("Error:", error);
         alert("An error occurred while forecasting data: " + error);
