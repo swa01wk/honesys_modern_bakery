@@ -1,46 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      body {
+        max-width: 100%;
+      }
+      .card {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 16px;
+        margin: 8px 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        width: 42%;
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: 10px;
+        row-gap: 10px;
+      }
+      /* .card-title {
+      } */
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forecast Chart</title>
-</head>
-
-<body>
-    <h1>Forecast Chart</h1>
-    <div>
-        <img id="forecast-chart" src="" alt="Forecast Chart" style="display:none;">
+      .card-content {
+        width: 46%;
+      }
+      #filter-card-container,
+      #transform-card-container
+       {
+        padding: 20px 20px;
+        max-height: 400px;
+        overflow: auto;
+        max-width: 100%;
+        display: flex;
+        align-items: center;
+        column-gap: 30px;
+        flex-wrap: wrap;
+      }
+      #forecast-card-container {
+        padding: 20px 20px;
+        max-height: 400px;
+        overflow: auto;
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+        column-gap: 30px;
+      }
+      .input-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+        padding: 15px 0px;
+      }
+      .input-field {
+        width: 500px;
+        padding: 10px;
+      }
+      .loader {
+        border: 8px solid #f3f3f3; /* Light grey */
+        border-top: 8px solid #3498db; /* Blue */
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+      }
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .hidden {
+        display: none;
+      }
+      section{
+        padding: 14px 0;
+      }
+      .forecast-image {
+    width: 90%;
+    height: auto;
+    display: block;
+    margin: 0 auto; /* Center the image horizontally */
+}
+    </style>
+  </head>
+  <body>
+    <h1>Honesys Modern Bakery</h1>
+    <p>Please enter below values to fetch Filter Data</p>
+    <p><b>file_path : </b>C:/Users/DELL/Desktop/Honesys/honesys_modern_bakery/DEC-JAN-FEB-MAR.xlsx</p>
+    <p><b>material_name : </b>BREAD ROLL SANDWICH 6.3/4" PLAIN</p>
+    <p><b>sold_to_party : </b>202604</p>
+    <div class="input-wrapper">
+      <input
+        class="input-field"
+        type="text"
+        id="file_path"
+        
+        placeholder="Enter File Path"
+      />
+      <input
+        class="input-field"
+        type="text"
+        id="material_name"
+        
+        placeholder="Enter Material Name"
+      />
+      <input
+        class="input-field"
+        type="text"
+        id="sold_to_party"
+        
+        placeholder="Enter Sold To Party Value"
+      />
     </div>
+    <section>
+        <button id="filterButton">Filter Data</button>
+    <div id="filter-loader" class="loader hidden"></div>
+    <h2>Filtered Details :</h2>
+    <div id="filter-card-container"></div>
+    </section>
 
-    <script>
-        // Function to fetch and display the forecast chart
-        async function fetchForecast() {
-            const response = await fetch('/forecast', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    // Provide the required data here
-                    aggregated_data: [/* Your aggregated data here */],
-                    shift_offset: -4,
-                    forecast_days: 7,
-                    seasonal_period: 4
-                })
-            });
+    <section>
+        <button id="transformButton">Transform Data</button>
+        <div id="transform-loader" class="loader hidden"></div>
+    <h2>Transform Details :</h2>
+    <div id="transform-card-container"></div>
+    </section>
 
-            if (response.ok) {
-                const data = await response.json();
-                const chart = document.getElementById('forecast-chart');
-                chart.src = data.image_url;
-                chart.style.display = 'block';
-            }
-        }
+    <section>
+        <button id="forecastButton">Forecast Data</button>
+        <div id="forecast-loader" class="loader hidden"></div>
+    <h2>Forecast Details :</h2>
+    <div id="forecast-card-container"></div>
+    </section>
 
-        // Call fetchForecast to display the chart
-        fetchForecast();
-    </script>
-</body>
-
+    <script src="script.js"></script>
+  </body>
 </html>

@@ -28,7 +28,8 @@ def index():
 
 @app.route("/filter_data", methods=["POST"])
 def filter_data():
-    file_path = request.json.get("file_path")
+    # file_path = request.json.get("file_path")
+    file_paths = ["./SEP-OCT-NOV.xlsx", "./DEC-JAN-FEB-MAR.xlsx"]
     material_name = request.json.get("material_name")
     sold_to_party = request.json.get("sold_to_party")
 

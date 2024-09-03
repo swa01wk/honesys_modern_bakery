@@ -4,13 +4,20 @@ import matplotlib.pyplot as plt
 
 
 class DataLoader:
-    def __init__(self, file_path):
-        self.file_path = file_path
+    def __init__(self, file_paths):
+        self.file_paths = file_paths
         self.data = None
 
     def load_data(self, sheet_name=None):
-        self.data = pd.read_excel(self.file_path, sheet_name=sheet_name)
-        self.data = pd.concat(self.data.values(), ignore_index=True)
+        all_data = []
+        
+        for file_path in self.file_paths:
+            data = pd.read_excel(file_path, sheet_name=sheet_name)
+            if isinstance(data, dict):
+                data = pd.concat(data.values(), ignore_index=True)
+            all_data.append(data)
+        
+        self.data = pd.concat(all_data, ignore_index=True)
         return self.data
 
     def convert_date(self, date_column):
@@ -129,10 +136,10 @@ class DataForecast:
         return net_df.to_frame(name="forecast_net")
 
 
-# file_path = "/mnt/c/Users/USER/OneDrive/Desktop/Modern Bakery/DEC-JAN-FEB-MAR.xlsx"
+# file_paths = ["./SEP-OCT-NOV.xlsx", "./DEC-JAN-FEB-MAR.xlsx"]
 # forecast_days = 7
 
-# data_loader = DataLoader(file_path=file_path)
+# data_loader = DataLoader(file_paths=file_paths[1])
 # data = data_loader.load_data()
 # data = data_loader.convert_date("BillingDate")
 
