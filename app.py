@@ -18,11 +18,13 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-IMAGE_DIR = 'static/images'
+IMAGE_DIR = "static/images"
+
 
 @app.route("/")
 def index():
     return render_template("index.html")
+
 
 @app.route("/filter_data", methods=["POST"])
 def filter_data():
@@ -39,6 +41,7 @@ def filter_data():
         material_name=material_name, sold_to_party=sold_to_party
     )
     return jsonify(filtered_data.to_dict(orient="records")), 200
+
 
 @app.route("/transform_data", methods=["POST"])
 def transform_data():
@@ -60,6 +63,7 @@ def transform_data():
 
     return jsonify(aggregated_data.to_dict(orient="records")), 200
 
+
 @app.route("/forecast", methods=["POST"])
 def forecast():
 
@@ -71,7 +75,9 @@ def forecast():
     seasonal_period = request.json.get("seasonal_period", 4)  # expiry period
 
     aggregated_data_df = pd.DataFrame(aggregated_data)
-    aggregated_data_df['BillingDate'] = pd.to_datetime(aggregated_data_df['BillingDate'])  # Ensure datetime format
+    aggregated_data_df["BillingDate"] = pd.to_datetime(
+        aggregated_data_df["BillingDate"]
+    )  # Ensure datetime format
     aggregated_data_df.set_index("BillingDate", inplace=True)
 
     data_processor = DataProcessor(aggregated_data=aggregated_data_df)
@@ -81,35 +87,24 @@ def forecast():
         results=results, forecast_days=forecast_days, seasonal_period=seasonal_period
     )
 
-    forecast_shelved = data_forecast.quantity_forecast('shelved_sum')
-    forecast_expired = data_forecast.quantity_forecast('expired_sum')
+    forecast_shelved = data_forecast.quantity_forecast("shelved_sum")
+    forecast_expired = data_forecast.quantity_forecast("expired_sum")
     forecast_net = data_forecast.net_forecast()
 
     plt.figure(figsize=(14, 6))
-    plt.plot(results.index, results['shelved_sum'], label='Historical Shelved', marker='o')
-    plt.plot(results.index, results['expired_sum'], label='Historical Expired', marker='o')
-    
     plt.plot(
-        forecast_shelved,
-        label='Forecast Shelved',
-        linestyle='--',
-        marker='o'
+        results.index, results["shelved_sum"], label="Historical Shelved", marker="o"
     )
     plt.plot(
-        forecast_expired,
-        label='Forecast Expired',
-        linestyle='--',
-        marker='o'
+        results.index, results["expired_sum"], label="Historical Expired", marker="o"
     )
-    plt.plot(
-        forecast_net,
-        label='Forecast Net Quantity',
-        linestyle='--',
-        marker='o'
-    )
-    plt.title('Forecast for Shelved, Expired, and Net Quantities')
-    plt.xlabel('Offset Date')
-    plt.ylabel('Quantity In Base Unit')
+
+    plt.plot(forecast_shelved, label="Forecast Shelved", linestyle="--", marker="o")
+    plt.plot(forecast_expired, label="Forecast Expired", linestyle="--", marker="o")
+    plt.plot(forecast_net, label="Forecast Net Quantity", linestyle="--", marker="o")
+    plt.title("Forecast for Shelved, Expired, and Net Quantities")
+    plt.xlabel("Offset Date")
+    plt.ylabel("Quantity In Base Unit")
     plt.grid(True)
     plt.legend()
     plt.tight_layout()
@@ -121,13 +116,27 @@ def forecast():
     plt.savefig(image_filename)
     plt.close()
 
-    return jsonify({"image_url": url_for('static', filename=f'images/{os.path.basename(image_filename)}')}), 200
+    return (
+        jsonify(
+            {
+                "image_url": url_for(
+                    "static", filename=f"images/{os.path.basename(image_filename)}"
+                ),
+                "forecasted_shelved": forecast_shelved,
+                "forecasted_expired": forecast_expired,
+                "forecasted_net": forecast_net,
+            }
+        ),
+        200,
+    )
+
 
 def cleanup_images():
     for filename in os.listdir(IMAGE_DIR):
         file_path = os.path.join(IMAGE_DIR, filename)
         if os.path.isfile(file_path):
             os.unlink(file_path)
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

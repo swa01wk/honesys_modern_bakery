@@ -108,7 +108,7 @@ class DataForecast:
         max_date = pd.to_datetime(max_date, format="%Y-%m-%d")
         forecast_start_date = max_date + pd.Timedelta(days=1)
         forecast_index = pd.date_range(
-            start=forecast_start_date, periods=self.forecast_days, freq='D'
+            start=forecast_start_date, periods=self.forecast_days, freq="D"
         )
         return forecast_index
 
