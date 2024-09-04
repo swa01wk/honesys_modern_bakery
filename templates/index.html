@@ -20,6 +20,36 @@
         column-gap: 10px;
         row-gap: 10px;
       }
+      .cardContainer{
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 16px;
+        margin: 8px 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        width: 80%;
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: 10px;
+        row-gap: 10px;
+      }
+      .forecastMaincontent{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px;
+      }
+      .expiredContainer,.netContainer,.shelvedContainer{
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 16px;
+        margin: 8px 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        width: 30%;
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: 10px;
+        row-gap: 10px;
+      }
       .card-title {
       }
 
@@ -27,8 +57,7 @@
         width: 46%;
       }
       #filter-card-container,
-      #transform-card-container
-       {
+      #transform-card-container {
         padding: 20px 20px;
         max-height: 400px;
         overflow: auto;
@@ -68,71 +97,72 @@
         margin: 20px auto;
       }
       @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
       .hidden {
         display: none;
       }
-      section{
+      section {
         padding: 14px 0;
       }
       .forecast-image {
-    width: 90%;
-    height: auto;
-    display: block;
-    margin: 0 auto; /* Center the image horizontally */
-}
+        width: 90%;
+        height: auto;
+        display: block;
+        margin: 0 auto; /* Center the image horizontally */
+      }
     </style>
   </head>
   <body>
     <h1>Honesys Modern Bakery</h1>
-    <p>Please enter below values to fetch Filter Data</p>
-    <p><b>file_path : </b>C:/Users/DELL/Desktop/Honesys/honesys_modern_bakery/DEC-JAN-FEB-MAR.xlsx</p>
-    <p><b>material_name : </b>BREAD ROLL SANDWICH 6.3/4" PLAIN</p>
-    <p><b>sold_to_party : </b>202604</p>
+    <section>
+      <button id="loadDataButton">Load Data</button>
+      <div id="data-loader" class="loader hidden"></div>
+    </section>
+    <h3>
+      Please Select Material name and Vendor value from dropdown to fetch Filter
+      Data
+    </h3>
+
     <div class="input-wrapper">
-      <input
-        class="input-field"
-        type="text"
-        id="file_path"
-        
-        placeholder="Enter File Path"
-      />
-      <input
-        class="input-field"
-        type="text"
-        id="material_name"
-        
-        placeholder="Enter Material Name"
-      />
-      <input
-        class="input-field"
-        type="text"
-        id="sold_to_party"
-        
-        placeholder="Enter Sold To Party Value"
-      />
+      <div>
+        <b>material_name : </b>
+        <select class="input-field" id="material_name">
+          <option value="">Select Material Name</option>
+        </select>
+      </div>
+      <div>
+        <b>sold_to_party : </b>
+        <select class="input-field" id="sold_to_party">
+          <option value="">Select Sold To Party</option>
+        </select>
+      </div>
     </div>
+
     <section>
-        <button id="filterButton">Filter Data</button>
-    <div id="filter-loader" class="loader hidden"></div>
-    <h2>Filtered Details :</h2>
-    <div id="filter-card-container"></div>
+      <button id="filterButton">Filter Data</button>
+      <div id="filter-loader" class="loader hidden"></div>
+      <h2>Filtered Details :</h2>
+      <div id="filter-card-container"></div>
     </section>
 
     <section>
-        <button id="transformButton">Transform Data</button>
-        <div id="transform-loader" class="loader hidden"></div>
-    <h2>Transform Details :</h2>
-    <div id="transform-card-container"></div>
+      <button id="transformButton">Transform Data</button>
+      <div id="transform-loader" class="loader hidden"></div>
+      <h2>Transform Details :</h2>
+      <div id="transform-card-container"></div>
     </section>
 
     <section>
-        <button id="forecastButton">Forecast Data</button>
-        <div id="forecast-loader" class="loader hidden"></div>
-    <h2>Forecast Details :</h2>
-    <div id="forecast-card-container"></div>
+      <button id="forecastButton">Forecast Data</button>
+      <div id="forecast-loader" class="loader hidden"></div>
+      <h2>Forecast Details :</h2>
+      <div id="forecast-card-container"></div>
     </section>
 
     <script src="script.js"></script>

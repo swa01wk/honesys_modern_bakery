@@ -1,16 +1,23 @@
 import pandas as pd
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 import matplotlib.pyplot as plt
-
+import json
 
 class DataLoader:
-    def __init__(self, file_path):
-        self.file_path = file_path
+    def __init__(self, file_paths):
+        self.file_paths = file_paths
         self.data = None
 
     def load_data(self, sheet_name=None):
-        self.data = pd.read_excel(self.file_path, sheet_name=sheet_name)
-        self.data = pd.concat(self.data.values(), ignore_index=True)
+        all_data = []
+
+        for file_path in self.file_paths:
+            data = pd.read_excel(file_path, sheet_name=sheet_name)
+            if isinstance(data, dict):
+                data = pd.concat(data.values(), ignore_index=True)
+            all_data.append(data)
+
+        self.data = pd.concat(all_data, ignore_index=True)
         return self.data
 
     def convert_date(self, date_column):
@@ -108,7 +115,7 @@ class DataForecast:
         max_date = pd.to_datetime(max_date, format="%Y-%m-%d")
         forecast_start_date = max_date + pd.Timedelta(days=1)
         forecast_index = pd.date_range(
-            start=forecast_start_date, periods=self.forecast_days
+            start=forecast_start_date, periods=self.forecast_days, freq="D"
         )
         return forecast_index
 
@@ -129,12 +136,16 @@ class DataForecast:
         return net_df.to_frame(name="forecast_net")
 
 
-# file_path = "/mnt/c/Users/USER/OneDrive/Desktop/Modern Bakery/DEC-JAN-FEB-MAR.xlsx"
+# file_paths = ["./data/SEP-OCT-NOV.xlsx", "./data/DEC-JAN-FEB-MAR.xlsx"]
 # forecast_days = 7
 
-# data_loader = DataLoader(file_path=file_path)
+# data_loader = DataLoader(file_paths=file_paths)
 # data = data_loader.load_data()
 # data = data_loader.convert_date("BillingDate")
+
+# get_all_materials = data['SoldToParty'].unique().tolist()
+# print(json.dumps(get_all_materials))
+
 
 # data_filter = DataFilter(data=data)
 # filtered_data = data_filter.apply_filters(
