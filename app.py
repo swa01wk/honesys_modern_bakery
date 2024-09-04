@@ -46,13 +46,13 @@ def index():
 @app.route("/all_materials", methods=["GET"])
 def get_all_materials():
     with open('./data/drop_down.json', 'r') as f:
-        data = json.load(f.read())
+        data = json.load(f)
     return jsonify(data["materials"])
 
 @app.route("/all_vendors", methods=["GET"])
 def get_all_vendors():
     with open('./data/drop_down.json', 'r') as f:
-        data = json.load(f.read())
+        data = json.load(f)
     return jsonify(data["vendors"])
 
 @app.route("/load_data", methods=["GET"])
