@@ -26,6 +26,7 @@ app.config['CACHE_DEFAULT_TIMEOUT'] = 600  #Cache timeout in seconds (10 minutes
 cache = Cache(app)
 
 IMAGE_DIR = "static/images"
+os.makedirs(IMAGE_DIR, exist_ok=True)
 
 def load_and_prepare_data():
     file_paths = ["./data/SEP-OCT-NOV.xlsx", "./data/DEC-JAN-FEB-MAR.xlsx"]
@@ -61,7 +62,7 @@ def load_data():
         return jsonify({"status": True}), 200
     except:
         traceback.print_exc()
-        return jsonify({"status": True}), 500
+        return jsonify({"status": False}), 500
 
 @app.route("/filter_data", methods=["POST"])
 def filter_data():
