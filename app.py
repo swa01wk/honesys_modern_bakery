@@ -14,28 +14,57 @@ from ets_forecast import (
 )
 
 from flask_cors import CORS
+import json
+from flask_caching import Cache
 
 app = Flask(__name__)
 CORS(app)
 
+app.config['CACHE_TYPE'] = 'SimpleCache'  #SimpleCache for in-memory caching
+app.config['CACHE_DEFAULT_TIMEOUT'] = 600  #Cache timeout in seconds (10 minutes)
+cache = Cache(app)
+
 IMAGE_DIR = "static/images"
 
+def load_and_prepare_data():
+    file_paths = ["./data/SEP-OCT-NOV.xlsx", "./data/DEC-JAN-FEB-MAR.xlsx"]
+    data_loader = DataLoader(file_paths=file_paths)
+    data = data_loader.load_data()
+    data = data_loader.convert_date("BillingDate")
+    return pd.DataFrame(data)
+
+@cache.cached(key_prefix='loaded_data')
+def get_cached_data():
+    return load_and_prepare_data()
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
+@app.route("/all_materials", methods=["GET"])
+def get_all_materials():
+    with open('./data/drop_down.json', 'r') as f:
+        data = json.load(f.read())
+    return jsonify(data["materials"])
+
+@app.route("/all_vendors", methods=["GET"])
+def get_all_vendors():
+    with open('./data/drop_down.json', 'r') as f:
+        data = json.load(f.read())
+    return jsonify(data["vendors"])
+
+@app.route("/load_data", methods=["GET"])
+def load_data():
+    data = get_cached_data()
+    return jsonify(data.to_dict(orient="records")), 200
 
 @app.route("/filter_data", methods=["POST"])
 def filter_data():
-    # file_path = request.json.get("file_path")
-    file_paths = ["./SEP-OCT-NOV.xlsx", "./DEC-JAN-FEB-MAR.xlsx"]
+
     material_name = request.json.get("material_name")
     sold_to_party = request.json.get("sold_to_party")
 
-    data_loader = DataLoader(file_path=file_path)
-    data = data_loader.load_data()
-    data = data_loader.convert_date("BillingDate")
+    data = get_cached_data()
 
     data_filter = DataFilter(data=pd.DataFrame(data))
     filtered_data = data_filter.apply_filters(
@@ -123,9 +152,9 @@ def forecast():
                 "image_url": url_for(
                     "static", filename=f"images/{os.path.basename(image_filename)}"
                 ),
-                "forecasted_shelved": forecast_shelved,
-                "forecasted_expired": forecast_expired,
-                "forecasted_net": forecast_net,
+                "forecasted_shelved": forecast_shelved.to_dict(orient="records"),
+                "forecasted_expired": forecast_expired.to_dict(orient="records"),
+                "forecasted_net": forecast_net.to_dict(orient="records"),
             }
         ),
         200,

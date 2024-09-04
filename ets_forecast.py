@@ -1,7 +1,7 @@
 import pandas as pd
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
 import matplotlib.pyplot as plt
-
+import json
 
 class DataLoader:
     def __init__(self, file_paths):
@@ -10,13 +10,13 @@ class DataLoader:
 
     def load_data(self, sheet_name=None):
         all_data = []
-        
+
         for file_path in self.file_paths:
             data = pd.read_excel(file_path, sheet_name=sheet_name)
             if isinstance(data, dict):
                 data = pd.concat(data.values(), ignore_index=True)
             all_data.append(data)
-        
+
         self.data = pd.concat(all_data, ignore_index=True)
         return self.data
 
@@ -136,12 +136,16 @@ class DataForecast:
         return net_df.to_frame(name="forecast_net")
 
 
-# file_paths = ["./SEP-OCT-NOV.xlsx", "./DEC-JAN-FEB-MAR.xlsx"]
+# file_paths = ["./data/SEP-OCT-NOV.xlsx", "./data/DEC-JAN-FEB-MAR.xlsx"]
 # forecast_days = 7
 
-# data_loader = DataLoader(file_paths=file_paths[1])
+# data_loader = DataLoader(file_paths=file_paths)
 # data = data_loader.load_data()
 # data = data_loader.convert_date("BillingDate")
+
+# get_all_materials = data['SoldToParty'].unique().tolist()
+# print(json.dumps(get_all_materials))
+
 
 # data_filter = DataFilter(data=data)
 # filtered_data = data_filter.apply_filters(
