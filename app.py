@@ -16,6 +16,7 @@ from ets_forecast import (
 from flask_cors import CORS
 import json
 from flask_caching import Cache
+import traceback
 
 app = Flask(__name__)
 CORS(app)
@@ -55,8 +56,12 @@ def get_all_vendors():
 
 @app.route("/load_data", methods=["GET"])
 def load_data():
-    data = get_cached_data()
-    return jsonify(data.to_dict(orient="records")), 200
+    try:
+        data = get_cached_data()
+        return jsonify({"status": True}), 200
+    except:
+        traceback.print_exc()
+        return jsonify({"status": True}), 500
 
 @app.route("/filter_data", methods=["POST"])
 def filter_data():
