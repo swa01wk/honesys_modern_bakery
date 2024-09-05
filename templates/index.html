@@ -1,176 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-    <style>
-      body {
-        max-width: 100%;
-      }
-      .card {
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        padding: 16px;
-        margin: 8px 0;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        width: 42%;
-        display: flex;
-        flex-wrap: wrap;
-        column-gap: 10px;
-        row-gap: 10px;
-      }
-      .cardContainer{
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        padding: 16px;
-        margin: 8px 0;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        width: 80%;
-        display: flex;
-        flex-wrap: wrap;
-        column-gap: 10px;
-        row-gap: 10px;
-      }
-      .forecastMaincontent{
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 20px;
-      }
-      .expiredContainer,.netContainer,.shelvedContainer{
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        padding: 16px;
-        margin: 8px 0;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        width: 30%;
-        display: flex;
-        flex-wrap: wrap;
-        column-gap: 10px;
-        row-gap: 10px;
-      }
-      .card-title {
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document</title>
+  <style>
+    body {
+      max-width: 100%;
+    }
+
+    .card {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 16px;
+      margin: 8px 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      width: 42%;
+      display: flex;
+      flex-wrap: wrap;
+      column-gap: 10px;
+      row-gap: 10px;
+    }
+
+    .cardContainer {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 16px;
+      margin: 8px 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      width: 80%;
+      display: flex;
+      flex-wrap: wrap;
+      column-gap: 10px;
+      row-gap: 10px;
+    }
+
+    .forecastMaincontent {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px;
+    }
+
+    .expiredContainer,
+    .netContainer,
+    .shelvedContainer {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 16px;
+      margin: 8px 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      width: 30%;
+      display: flex;
+      flex-wrap: wrap;
+      column-gap: 10px;
+      row-gap: 10px;
+    }
+
+    .card-title {}
+
+    .card-content {
+      width: 46%;
+    }
+
+    #filter-card-container,
+    #transform-card-container {
+      padding: 20px 20px;
+      max-height: 400px;
+      overflow: auto;
+      max-width: 100%;
+      display: flex;
+      align-items: center;
+      column-gap: 30px;
+      flex-wrap: wrap;
+    }
+
+    #forecast-card-container {
+      padding: 20px 20px;
+      height: auto;
+      overflow: auto;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      column-gap: 30px;
+    }
+
+    .input-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 15px 0px;
+    }
+
+    .input-field {
+      width: 500px;
+      padding: 10px;
+    }
+
+    .loader {
+      border: 8px solid #f3f3f3;
+      /* Light grey */
+      border-top: 8px solid #3498db;
+      /* Blue */
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
       }
 
-      .card-content {
-        width: 46%;
+      100% {
+        transform: rotate(360deg);
       }
-      #filter-card-container,
-      #transform-card-container {
-        padding: 20px 20px;
-        max-height: 400px;
-        overflow: auto;
-        max-width: 100%;
-        display: flex;
-        align-items: center;
-        column-gap: 30px;
-        flex-wrap: wrap;
-      }
-      #forecast-card-container {
-        padding: 20px 20px;
-        height: auto;
-        overflow: auto;
-        max-width: 100%;
-        display: flex;
-        flex-direction: column;
-        column-gap: 30px;
-      }
-      .input-wrapper {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        align-items: flex-start;
-        padding: 15px 0px;
-      }
-      .input-field {
-        width: 500px;
-        padding: 10px;
-      }
-      .loader {
-        border: 8px solid #f3f3f3; /* Light grey */
-        border-top: 8px solid #3498db; /* Blue */
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-        margin: 20px auto;
-      }
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-      .hidden {
-        display: none;
-      }
-      section {
-        padding: 14px 0;
-      }
-      .forecast-image {
-        width: 90%;
-        height: auto;
-        display: block;
-        margin: 0 auto; /* Center the image horizontally */
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Honesys Modern Bakery</h1>
-    <section>
-      <button id="loadDataButton">Load Data</button>
-      <div id="data-loader" class="loader hidden"></div>
-    </section>
-    <h3>
-      Please Select Material name and Vendor value from dropdown to fetch Filter
-      Data
-    </h3>
+    }
 
-    <div class="input-wrapper">
-      <div>
-        <b>material_name : </b>
-        <select class="input-field" id="material_name">
-          <option value="">Select Material Name</option>
-        </select>
-      </div>
-      <div>
-        <b>sold_to_party : </b>
-        <select class="input-field" id="sold_to_party">
-          <option value="">Select Sold To Party</option>
-        </select>
-      </div>
+    .hidden {
+      display: none;
+    }
+
+    section {
+      padding: 14px 0;
+    }
+
+    .forecast-image {
+      width: 90%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      /* Center the image horizontally */
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Honesys Modern Bakery</h1>
+  <section>
+    <button id="loadDataButton">Load Data</button>
+    <div id="data-loader" class="loader hidden"></div>
+  </section>
+  <h3>
+    Please Select Material name and Vendor value from dropdown to fetch Filter
+    Data
+  </h3>
+
+  <div class="input-wrapper">
+    <div>
+      <b>material_name : </b>
+      <select class="input-field" id="material_name">
+        <option value="">Select Material Name</option>
+      </select>
     </div>
-    <section>
-        <button id="filterButton">Filter Data</button>
+    <div>
+      <b>sold_to_party : </b>
+      <select class="input-field" id="sold_to_party">
+        <option value="">Select Sold To Party</option>
+      </select>
+    </div>
+  </div>
+  <section>
+    <button id="filterButton">Filter Data</button>
     <div id="filter-loader" class="loader hidden"></div>
     <h2>Filtered Details :</h2>
     <div id="filter-card-container"></div>
-    </section>
+  </section>
 
-    <section>
-      <button id="filterButton">Filter Data</button>
-      <div id="filter-loader" class="loader hidden"></div>
-      <h2>Filtered Details :</h2>
-      <div id="filter-card-container"></div>
-    </section>
+  <section>
+    <button id="transformButton">Transform Data</button>
+    <div id="transform-loader" class="loader hidden"></div>
+    <h2>Transform Details :</h2>
+    <div id="transform-card-container"></div>
+  </section>
 
-    <section>
-      <button id="transformButton">Transform Data</button>
-      <div id="transform-loader" class="loader hidden"></div>
-      <h2>Transform Details :</h2>
-      <div id="transform-card-container"></div>
-    </section>
+  <section>
+    <button id="forecastButton">Forecast Data</button>
+    <div id="forecast-loader" class="loader hidden"></div>
+    <h2>Forecast Details :</h2>
+    <div id="forecast-card-container"></div>
+  </section>
 
-    <section>
-      <button id="forecastButton">Forecast Data</button>
-      <div id="forecast-loader" class="loader hidden"></div>
-      <h2>Forecast Details :</h2>
-      <div id="forecast-card-container"></div>
-    </section>
+  <script src="static/script.js"></script>
+</body>
 
-    <script src="script.js"></script>
-  </body>
 </html>

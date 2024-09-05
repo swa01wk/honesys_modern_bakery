@@ -21,7 +21,7 @@ app = Flask(__name__)
 CORS(app)
 
 app.config['CACHE_TYPE'] = 'SimpleCache'  #SimpleCache for in-memory caching
-app.config['CACHE_DEFAULT_TIMEOUT'] = 2000  #Cache timeout in seconds (10 minutes)
+app.config['CACHE_DEFAULT_TIMEOUT'] = 2000  #Cache timeout in seconds (30 minutes)
 cache = Cache(app)
 
 IMAGE_DIR = "static/images"
