@@ -2,8 +2,8 @@ let filterAPIResponse = [];
 let transformAPIResponse = [];
 let forecastAPIResponse = [];
 
-const BASE_PATH = "http://43.204.211.22:5000";
-/* const BASE_PATH = "http://127.0.0.1:5000"; */
+/* const BASE_PATH = "http://43.204.211.22:5000"; */
+const BASE_PATH = "http://127.0.0.1:5000";
 
 document.addEventListener("DOMContentLoaded", function () {
   // Disable buttons initially
