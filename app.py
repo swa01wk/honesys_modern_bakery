@@ -27,6 +27,11 @@ cache = Cache(app)
 IMAGE_DIR = "static/images"
 os.makedirs(IMAGE_DIR, exist_ok=True)
 
+@app.before_request
+def log_request_info():
+    app.logger.debug('Headers: %s', request.headers)
+    app.logger.debug('Body: %s', request.get_data())
+
 def load_and_prepare_data():
     file_paths = ["./data/SEP-OCT-NOV.xlsx", "./data/DEC-JAN-FEB-MAR.xlsx"]
     data_loader = DataLoader(file_paths=file_paths)
@@ -69,7 +74,10 @@ def filter_data():
     material_name = request.json.get("material_name")
     sold_to_party = request.json.get("sold_to_party")
 
+    app.logger.debug("Received filter data: %s", material_name, sold_to_party)
     data = get_cached_data()
+
+    app.logger.debug("Received data: %s", data)
 
     data_filter = DataFilter(data=pd.DataFrame(data))
     filtered_data = data_filter.apply_filters(
@@ -81,6 +89,7 @@ def filter_data():
 @app.route("/transform_data", methods=["POST"])
 def transform_data():
     filtered_data = request.json.get("filtered_data")
+    app.logger.debug("Received filter data: %s", filtered_data)
 
     filtered_data = [
         {
@@ -105,6 +114,8 @@ def forecast():
     cleanup_images()
 
     aggregated_data = request.json.get("aggregated_data")
+    app.logger.debug("Received aggregated_data: %s", aggregated_data)
+
     shift_offset = request.json.get("shift_offset", -4)  # offset by expiry period
     forecast_days = request.json.get("forecast_days", 10)
     seasonal_period = request.json.get("seasonal_period", 4)  # expiry period
