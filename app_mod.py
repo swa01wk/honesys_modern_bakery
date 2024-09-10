@@ -14,51 +14,67 @@ from ets_forecast import (
 )
 from flask_cors import CORS
 import json
+from flask_caching import Cache
 import traceback
-from supabase import create_client, Client
-from dotenv import load_dotenv
-
-load_dotenv()
-
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 app = Flask(__name__)
 CORS(app)
 
+app.config["CACHE_TYPE"] = "SimpleCache"  # SimpleCache for in-memory caching
+app.config["CACHE_DEFAULT_TIMEOUT"] = 2000  # Cache timeout in seconds (30 minutes)
+cache = Cache(app)
+
 IMAGE_DIR = "static/images"
 os.makedirs(IMAGE_DIR, exist_ok=True)
 
+
 @app.before_request
 def log_request_info():
-    app.logger.debug('Headers: %s', request.headers)
-    app.logger.debug('Body: %s', request.get_data())
+    app.logger.debug("Headers: %s", request.headers)
+    app.logger.debug("Body: %s", request.get_data())
+
+
+def load_and_prepare_data():
+    file_paths = ["./data/SEP-OCT-NOV.xlsx", "./data/DEC-JAN-FEB-MAR.xlsx"]
+    data_loader = DataLoader(file_paths=file_paths)
+    data = data_loader.load_data()
+    data = data_loader.convert_date("BillingDate")
+    return pd.DataFrame(data)
+
+
+@cache.cached(key_prefix="loaded_data")
+def get_cached_data():
+    return load_and_prepare_data()
+
 
 @app.route("/")
 def index():
     return render_template("index.html")
 
+
 @app.route("/all_materials", methods=["GET"])
 def get_all_materials():
-    with open('./data/drop_down.json', 'r') as f:
+    with open("./data/drop_down.json", "r") as f:
         data = json.load(f)
     return jsonify(data["materials"])
 
+
 @app.route("/all_vendors", methods=["GET"])
 def get_all_vendors():
-    with open('./data/drop_down.json', 'r') as f:
+    with open("./data/drop_down.json", "r") as f:
         data = json.load(f)
     return jsonify(data["vendors"])
+
 
 @app.route("/load_data", methods=["GET"])
 def load_data():
     try:
+        data = get_cached_data()
         return jsonify({"status": True}), 200
     except:
         traceback.print_exc()
         return jsonify({"status": False}), 500
+
 
 @app.route("/filter_data", methods=["POST"])
 def filter_data():
@@ -67,10 +83,8 @@ def filter_data():
     sold_to_party = request.json.get("sold_to_party")
 
     app.logger.debug("Received filter data: %s", material_name, sold_to_party)
-    # response = supabase.table('sales').select('*').eq('MaterialName', 'BREAD BUN 4" SESAME').eq('SoldToParty', 203510).execute()
-    response = supabase.table('sales').select('*').eq('MaterialName', material_name).eq('SoldToParty', sold_to_party).execute()
+    data = get_cached_data()
 
-    data  = pd.DataFrame(response.data)
     app.logger.debug("Received data: %s", data)
 
     data_filter = DataFilter(data=pd.DataFrame(data))
@@ -88,7 +102,9 @@ def transform_data():
     filtered_data = [
         {
             **record,
-            "BillingDate": datetime.strptime(record["BillingDate"], "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d"),
+            "BillingDate": datetime.strptime(
+                record["BillingDate"], "%a, %d %b %Y %H:%M:%S %Z"
+            ).strftime("%Y-%m-%d"),
         }
         for record in filtered_data
     ]
@@ -177,4 +193,4 @@ def cleanup_images():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host="0.0.0.0", port=5000)

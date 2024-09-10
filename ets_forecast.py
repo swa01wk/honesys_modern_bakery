@@ -3,6 +3,7 @@ from statsmodels.tsa.holtwinters import ExponentialSmoothing
 import matplotlib.pyplot as plt
 import json
 
+
 class DataLoader:
     def __init__(self, file_paths):
         self.file_paths = file_paths
@@ -22,6 +23,7 @@ class DataLoader:
 
     def convert_date(self, date_column):
         self.data[date_column] = pd.to_datetime(self.data[date_column], format="%Y%m%d")
+        self.data[date_column] = self.data[date_column].dt.strftime('%Y-%m-%d %H:%M:%S')
         return self.data
 
 
@@ -76,11 +78,9 @@ class DataProcessor:
         self.aggregated_data["expired_sum"] = self.aggregated_data["expired_sum"].shift(
             shift_offset, fill_value=0
         )
-
         self.aggregated_data["net_sum"] = (
-            self.aggregated_data["shelved_sum"] + self.aggregated_data["expired_sum"]
+            self.aggregated_data["shelved_sum"] - self.aggregated_data["expired_sum"]
         )
-
         self.result_data = (
             self.aggregated_data.groupby("BillingDate")
             .agg(
@@ -90,24 +90,33 @@ class DataProcessor:
             )
             .reset_index()
         )
-
         self.result_data.set_index("BillingDate", inplace=True)
         return self.result_data.iloc[:shift_offset]
 
 
 class DataForecast:
-    def __init__(self, results, forecast_days, seasonal_period):
+    def __init__(self, results, forecast_days, seasonal_period, max_expiry_ratio=0.05, safety_stock=20):
         self.results = results
         self.forecast_days = forecast_days
         self.seasonal_period = seasonal_period
+        self.max_expiry_ratio = max_expiry_ratio  # Maximum percentage of shelved stock that can expire
+        self.safety_stock = safety_stock  # Buffer to avoid stockouts
+        self.carryover_stock = 0  # Initialize carryover stock
 
     def fit_model(self, column_quantity):
+        # Fitting the Exponential Smoothing (ETS) model
         model = ExponentialSmoothing(
             self.results[column_quantity],
             seasonal="add",
             trend="add",
             seasonal_periods=self.seasonal_period,
-        ).fit()
+            damped_trend=False,  # Allow more aggressive predictions by disabling damped trend
+            initialization_method='estimated'  # Using 'estimated' for better fit
+        ).fit(
+            smoothing_level=0.6,  # More weight on recent data
+            smoothing_slope=0.5,  # Moderate trend smoothing
+            smoothing_seasonal=0.6  # More aggressive seasonal smoothing
+        )
         return model
 
     def forecasting_period(self):
@@ -120,32 +129,68 @@ class DataForecast:
         return forecast_index
 
     def quantity_forecast(self, column_quantity):
+        # Forecasting for a specific quantity (e.g., shelved_sum or expired_sum)
         forecast_model = self.fit_model(column_quantity)
         forecast_index = self.forecasting_period()
         forecast_series = forecast_model.forecast(steps=self.forecast_days).round()
+
+        # Apply carryover stock adjustment and safety stock
+        forecast_series += self.carryover_stock  # Add carryover stock from the previous day
+        forecast_series = forecast_series.clip(lower=self.safety_stock)  # Ensure minimum stock level
+
         return pd.DataFrame(
             {f"forecast_{column_quantity}": forecast_series.values},
             index=forecast_index,
         )
 
-    def net_forecast(self):
-        shelved_df = self.quantity_forecast("shelved_sum")
+    def shelved_forecast(self):
+        # Forecast shelved quantities
+        return self.quantity_forecast("shelved_sum")
+
+    def expired_forecast(self, shelved_df):
+        # Forecast expired quantities, but cap them based on max_expiry_ratio to minimize wastage
         expired_df = self.quantity_forecast("expired_sum")
-        net_df = shelved_df["forecast_shelved_sum"] + expired_df["forecast_expired_sum"]
 
-        return net_df.to_frame(name="forecast_net")
+        # Ensure expired values are negative or zero (expired stock should reduce the shelved stock)
+        expired_df[f"forecast_expired_sum"] = expired_df[f"forecast_expired_sum"].clip(upper=0)
 
+        # Cap expired quantities based on shelved stock, ensuring expired stock is non-positive
+        expired_df[f"forecast_expired_sum"] = expired_df[f"forecast_expired_sum"].clip(
+            upper=shelved_df[f"forecast_shelved_sum"] * (-self.max_expiry_ratio)
+        )
+        
+        return expired_df
 
-# file_paths = ["./data/SEP-OCT-NOV.xlsx", "./data/DEC-JAN-FEB-MAR.xlsx"]
+    def net_forecast(self):
+        # Forecast shelved and expired quantities separately
+        shelved_df = self.shelved_forecast()
+        expired_df = self.expired_forecast(shelved_df)
+
+        # Calculate net available stock by subtracting expired forecast from shelved forecast
+        net_df = shelved_df[f"forecast_shelved_sum"] + expired_df[f"forecast_expired_sum"]
+
+        # Ensure net forecast does not go below zero
+        return pd.DataFrame({"forecast_net": net_df.clip(lower=0)}, index=shelved_df.index)
+
+    def update_carryover_stock(self, actual_sold):
+        # Update carryover stock based on sales data
+        shelved_forecast = self.shelved_forecast()
+        total_stock = shelved_forecast.sum().values[0]  # Total stock available (forecasted)
+        unsold_stock = total_stock - actual_sold  # Stock left unsold
+
+        # Carryover stock is unsold stock that rolls over to the next day
+        self.carryover_stock = max(unsold_stock, 0)  # Ensure it's not negative
+
+        # Clip carryover to avoid exceeding expiration limits
+        self.carryover_stock = min(self.carryover_stock, total_stock * self.max_expiry_ratio)
+
+# # file_paths = ["./data/SEP-OCT-NOV.xlsx", "./data/DEC-JAN-FEB-MAR.xlsx"]
+# file_paths = ["./data/SEP-OCT-NOV.xlsx"]
 # forecast_days = 7
 
 # data_loader = DataLoader(file_paths=file_paths)
 # data = data_loader.load_data()
 # data = data_loader.convert_date("BillingDate")
-
-# get_all_materials = data['SoldToParty'].unique().tolist()
-# print(json.dumps(get_all_materials))
-
 
 # data_filter = DataFilter(data=data)
 # filtered_data = data_filter.apply_filters(
@@ -160,6 +205,10 @@ class DataForecast:
 # result_df = data_processor.offset_and_recalculate(shift_offset=-4)
 
 # forecast = DataForecast(results=result_df, forecast_days=forecast_days, seasonal_period=4)
+
+# print(forecast.quantity_forecast("shelved_sum"))
+# print(forecast.quantity_forecast("expired_sum"))
+# print(forecast.net_forecast())
 
 # # Plot forecasts
 # plt.figure(figsize=(14, 6))
